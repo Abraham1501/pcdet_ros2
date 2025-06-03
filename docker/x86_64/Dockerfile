@@ -3,11 +3,11 @@
 ##############################################
 # From athackst/dockerfiles
 # https://github.com/athackst/dockerfiles/blob/main/ros2/humble-cuda.Dockerfile
-#
+# modified by Abraham1501
 ###########################################
 # Base image
 ###########################################
-FROM nvidia/cuda:11.7.0-runtime-ubuntu22.04 AS base
+FROM nvidia/cuda:11.7.1-devel-ubuntu22.04 AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -48,6 +48,23 @@ RUN sudo add-apt-repository universe \
     ros-humble-ros-base \
     python3-argcomplete \
   && rm -rf /var/lib/apt/lists/*
+
+# Env vars for the nvidia-container-runtime.
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV QT_X11_NO_MITSHM=1
+
+ENV ROS_DISTRO=humble
+ENV AMENT_PREFIX_PATH=/opt/ros/humble
+ENV COLCON_PREFIX_PATH=/opt/ros/humble
+ENV LD_LIBRARY_PATH=/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib
+ENV PATH=/opt/ros/humble/bin:$PATH
+ENV PYTHONPATH=/opt/ros/humble/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages
+ENV ROS_PYTHON_VERSION=3
+ENV ROS_VERSION=2
+ENV ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+ENV DEBIAN_FRONTEND=
+
 ###########################################
 #  Develop image
 ###########################################
@@ -98,34 +115,51 @@ RUN apt-get update && apt-get install -y --no-install-recommends git-core bash-c
 ENV DEBIAN_FRONTEND=
 ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 
+###########################################
+#  Install ROS2 dependencies
+###########################################
+RUN apt-get update && apt-get install -y \
+    ros-humble-pcl-conversions \
+    ros-humble-pcl-ros \
+    libpcl-dev \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Set up workspace
 WORKDIR /ws
 COPY . /ws
-# Build the workspace
-RUN . /opt/ros/humble/setup.sh && colcon build --symlink-install
 
 ###########################################
-#  Install Python packages
+#  OpenPCDet Installation
 ###########################################
-RUN python3 -m pip install --upgrade pip \
- && python3 -m pip install \
-    torch torchvision torchaudio \
-    tensorflow \
-    spconv-cu117 \
-    kornia open3d pyquaternion \
-    catkin_pkg \
-    nose \
-    transform3d
+RUN apt-get update && apt install -y g++-9
+ENV CXX=g++-9
 
-###########################################
-# Clone and setup Repositories
-###########################################
+# Set GPU architecture
+ENV TORCH_CUDA_ARCH_LIST="8.6"
+ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
 
-# Clone OpenPCDet
 RUN git clone https://github.com/open-mmlab/OpenPCDet.git \
- && cd OpenPCDet \
- && python3 -m pip install -r requirements.txt \
- && python3 setup.py develop
- # Clone ros2_numpy
-RUN mkdir -p src && cd src \
- && git clone https://github.com/Box-Robotics/ros2_numpy -b humble
+    && python3 -m pip install \
+    torch==2.0.1+cu117 torchvision==0.15.2+cu117 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu117 \
+    && pip install spconv-cu117==2.3.6
+RUN cd OpenPCDet \
+    && python3 -m pip install -r requirements.txt \
+    && python3 setup.py develop \
+    && python3 -m pip install \
+    kornia open3d pyquaternion \
+    && rm -rf /var/lib/apt/lists/*
+
+###############################################
+# Installtion and setup workspace to pcdet_ros2
+###############################################
+
+WORKDIR /ws/src
+RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble && \
+    python3 -m pip install catkin_pkg \
+    && python3 -m pip install nose transform3d \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ws
+#RUN rosdep update && \
+#    rosdep install -i --from-path src --rosdistro humble -y --skip-keys=python3-transforms3d && \
+#    /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install"
