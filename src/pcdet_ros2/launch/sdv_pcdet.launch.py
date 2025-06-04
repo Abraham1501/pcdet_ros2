@@ -10,7 +10,8 @@ from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
 #PATH to virtual enviroment
-VENV_PATH = "/home/kfcnef/pcdet_ros2/venv"
+VENV_PATH = os.path.join(os.path.dirname(__file__), "..", "venv")
+VENV_PATH = os.path.abspath(VENV_PATH)
 
 # Force virtual enviroment
 os.environ["VIRTUAL_ENV"] = VENV_PATH
@@ -70,7 +71,7 @@ def generate_launch_description():
     pcd_pub = Node(
         package='pcd_publisher',
         executable='3Ddetections_to_markers',
-        name='3Ddetections_to_markers',
+        name='detections_3d_to_markers',
         output='screen'         
     )
 

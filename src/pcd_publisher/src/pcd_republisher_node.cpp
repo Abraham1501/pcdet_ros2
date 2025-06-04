@@ -18,10 +18,10 @@ public:
 
 
     // Get topic types
-    auto topics = reader_->get_all_topics_and_types();
-    for (const auto & topic : topics) {
-        RCLCPP_INFO(this->get_logger(), "Found topic: %s [%s]", topic.name.c_str(), topic.type.c_str());
-    }
+    //auto topics_reader = Node->get_all_topics_and_types();
+    //for (const auto & topic : topics_reader) {
+    //    RCLCPP_INFO(this->get_logger(), "Found topic: %s [%s]", topic.name.c_str(), topic.type.c_str());
+    //}
 
     RCLCPP_INFO(this->get_logger(), "PointCloud republisher started.");
 

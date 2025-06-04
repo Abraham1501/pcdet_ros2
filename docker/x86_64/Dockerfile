@@ -82,6 +82,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-pip \
   ros-dev-tools \
   ros-humble-ament-* \
+  nano \
   vim \
   && rm -rf /var/lib/apt/lists/*
 
@@ -119,14 +120,18 @@ ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 #  Install ROS2 dependencies
 ###########################################
 RUN apt-get update && apt-get install -y \
+    ros-humble-sensor-msgs \
+    ros-humble-nav-msgs \
+    ros-humble-geometry-msgs \
+    ros-humble-vision-msgs \
+    ros-humble-visualization-msgs \
     ros-humble-pcl-conversions \
     ros-humble-pcl-ros \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-tf-transformations \
     libpcl-dev \
     && rm -rf /var/lib/apt/lists/*
-    
-# Set up workspace
-WORKDIR /ws
-COPY . /ws
 
 ###########################################
 #  OpenPCDet Installation
@@ -138,28 +143,41 @@ ENV CXX=g++-9
 ENV TORCH_CUDA_ARCH_LIST="8.6"
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
 
-RUN git clone https://github.com/open-mmlab/OpenPCDet.git \
-    && python3 -m pip install \
+# Set up workspace
+WORKDIR /ws
+
+# Clone repository
+RUN git clone https://github.com/open-mmlab/OpenPCDet.git
+
+# Install Python packages 
+RUN python3 -m pip install \
     torch==2.0.1+cu117 torchvision==0.15.2+cu117 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu117 \
-    && pip install spconv-cu117==2.3.6
-RUN cd OpenPCDet \
+    && pip install spconv-cu117==2.3.6 \
+    && cd OpenPCDet \
     && python3 -m pip install -r requirements.txt \
     && python3 setup.py develop \
     && python3 -m pip install \
-    kornia open3d pyquaternion \
+    kornia==0.6.1 open3d pyquaternion \
+    av2==0.3.4 \
     && rm -rf /var/lib/apt/lists/*
 
 ###############################################
-# Installtion and setup workspace to pcdet_ros2
+# Installation and setup workspace to pcdet_ros2
 ###############################################
-
-WORKDIR /ws/src
-RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble && \
-    python3 -m pip install catkin_pkg \
-    && python3 -m pip install nose transform3d \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /ws
-#RUN rosdep update && \
-#    rosdep install -i --from-path src --rosdistro humble -y --skip-keys=python3-transforms3d && \
-#    /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install"
+COPY . /ws
+WORKDIR /ws/src
+
+# clone ros_numpy
+RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble
+
+# Install Python packages
+RUN python3 -m pip install catkin_pkg \
+    && python3 -m pip install nose transform3d numpy==1.26.4 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ROS 2 ament_cmake_nose dependency
+RUN apt-get install -y \
+    ros-humble-ament-cmake-nose \
+    && rm -rf /var/lib/apt/lists/*
