@@ -7,7 +7,7 @@
 ###########################################
 # Base image
 ###########################################
-FROM nvidia/cuda:11.7.1-devel-ubuntu22.04 AS base
+FROM nvidia/cuda:12.1.0-devel-ubuntu22.04 AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -130,6 +130,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-tf-transformations \
+    ros-humble-ament-cmake-nose \
     libpcl-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -151,13 +152,13 @@ RUN git clone https://github.com/open-mmlab/OpenPCDet.git
 
 # Install Python packages 
 RUN python3 -m pip install \
-    torch==2.0.1+cu117 torchvision==0.15.2+cu117 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu117 \
-    && pip install spconv-cu117==2.3.6 \
+    && python3 -m pip install torch torchvision torchaudio \
+    && pip install spconv-cu120==2.3.6 \
     && cd OpenPCDet \
     && python3 -m pip install -r requirements.txt \
     && python3 setup.py develop \
     && python3 -m pip install \
-    kornia==0.6.1 open3d pyquaternion \
+    kornia==0.6.12 open3d==0.19.0 pyquaternion==0.9.9 \
     av2==0.3.4 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -174,7 +175,7 @@ RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble
 
 # Install Python packages
 RUN python3 -m pip install catkin_pkg \
-    && python3 -m pip install nose transform3d numpy==1.26.4 \
+    && python3 -m pip install nose==1.3.7 transform3d==0.0.4 numpy==1.26.4 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ROS 2 ament_cmake_nose dependency

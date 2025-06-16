@@ -7,7 +7,7 @@
 ###########################################
 # Base image
 ###########################################
-FROM nvcr.io/nvidia/l4t-base:35.4.1 AS base
+FROM nvcr.io/nvidia/l4t-cuda:r36.2.0-devel AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -41,9 +41,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ROS2
-RUN sudo add-apt-repository universe \
+RUN add-apt-repository universe \
   && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2.list > /dev/null \
   && apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-ros-base \
     python3-argcomplete \
@@ -149,14 +149,14 @@ RUN git clone https://github.com/open-mmlab/OpenPCDet.git
 
 # Install Python packages 
 RUN python3 -m pip install \
-    && pip install --upgrade \
-    && --extra-index-url https://pypi.nvidia.com torch==2.0.0+nv23.05 torchvision==0.15.1+nv23.05 torchaudio==2.0.2 \
-    && pip install spconv-cu117==2.3.6 \
+    && python3 -m pip install torch torchvision torchaudio \
+    && pip install spconv-cu120==2.3.6 \
     && cd OpenPCDet \
     && python3 -m pip install -r requirements.txt \
     && python3 setup.py develop \
     && python3 -m pip install \
-    kornia open3d pyquaternion \
+    kornia==0.6.12 open3d==0.19.0 pyquaternion==0.9.9 \
+    av2==0.3.4 \
     && rm -rf /var/lib/apt/lists/*
 
 ###############################################
@@ -172,7 +172,7 @@ RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble
 
 # Install Python packages
 RUN python3 -m pip install catkin_pkg \
-    && python3 -m pip install nose transform3d \
+    && python3 -m pip install nose==1.3.7 transform3d==0.0.4 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ROS 2 ament_cmake_nose dependency
