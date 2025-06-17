@@ -157,7 +157,7 @@ RUN python3 -m pip install \
     && python3 -m pip install -r requirements.txt \
     && python3 setup.py develop \
     && python3 -m pip install \
-    kornia==0.6.1 open3d pyquaternion \
+    kornia==0.8.0 open3d==0.19.0 pyquaternion==0.9.9 \
     av2==0.3.4 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -174,7 +174,7 @@ RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble
 
 # Install Python packages
 RUN python3 -m pip install catkin_pkg \
-    && python3 -m pip install nose transform3d numpy==1.26.4 \
+    && python3 -m pip install nose==1.3.7 transform3d==0.0.4 numpy==1.26.4 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ROS 2 ament_cmake_nose dependency
