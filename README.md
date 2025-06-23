@@ -13,7 +13,7 @@ First you must have ros2 humble installed, CUDA 11.7 installed and python 3.10 e
 git clone https://github.com/Abraham1501/pcdet_ros2.git
 cd pcdet_ros2
 # Install all dependecies, libraries and repositories
-./setup.shso
+./setup.sh
 ```
 ### Build
 
