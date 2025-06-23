@@ -55,8 +55,4 @@ install(TARGETS
   3Ddetections_to_markers
   DESTINATION lib/${PROJECT_NAME})
 
-# Install other resources
-install(DIRECTORY pcd
-  DESTINATION share/${PROJECT_NAME})
-
 ament_package()

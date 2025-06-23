@@ -9,7 +9,7 @@ cp ./extra/setup.py ./OpenPCDet/
 cd OpenPCDet
 python3 -m pip install -r requirements.txt
 python3 setup.py develop
-python3 -m pip install kornia==0.8.0 open3d==0.19.0
+python3 -m pip install kornia==0.6.0 open3d==0.19.0
 python3 -m pip install pyquaternion==0.9.9
 cd ..
 cd src/
@@ -19,6 +19,7 @@ sudo apt install ros-humble-ament-cmake-nose -y
 python3 -m pip install nose==1.3.7
 python3 -m pip install av2==0.3.4
 python3 -m pip install transform3d==0.0.4
+python3 -m pip install transform3sd==0.4.2
 python3 -m pip install numpy==1.26.4
 sudo apt-get update && sudo apt-get install -y \
     ros-humble-sensor-msgs \

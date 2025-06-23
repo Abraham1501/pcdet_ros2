@@ -41,17 +41,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ROS2
-RUN sudo add-apt-repository universe \
-  && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null \
-  && apt-get update && apt-get install -y --no-install-recommends \
-    ros-humble-ros-base \
-    python3-argcomplete \
-  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    curl gnupg2 lsb-release software-properties-common apt-transport-https ca-certificates && \
+    add-apt-repository -y universe && \
+    # Add ROS2 repository
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
+    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | \
+    tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
+    apt-get update && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y ros-humble-desktop-full && \
+    rm -rf /var/lib/apt/lists/*
 
 # Env vars for the nvidia-container-runtime.
 ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility,video,graphics,display
 ENV QT_X11_NO_MITSHM=1
 
 ENV ROS_DISTRO=humble
@@ -117,31 +123,11 @@ ENV DEBIAN_FRONTEND=
 ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 
 ###########################################
-#  Install ROS2 dependencies
+#  OpenPCDet Installation image
 ###########################################
-RUN apt-get update && apt-get install -y \
-    ros-humble-sensor-msgs \
-    ros-humble-nav-msgs \
-    ros-humble-geometry-msgs \
-    ros-humble-vision-msgs \
-    ros-humble-visualization-msgs \
-    ros-humble-pcl-conversions \
-    ros-humble-pcl-ros \
-    ros-humble-navigation2 \
-    ros-humble-nav2-bringup \
-    ros-humble-tf-transformations \
-    libpcl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-###########################################
-#  OpenPCDet Installation
-###########################################
-RUN apt-get update && apt install -y g++-9
-ENV CXX=g++-9
 
 # Set GPU architecture
 ENV TORCH_CUDA_ARCH_LIST="8.6"
-ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
 
 # Set up workspace
 WORKDIR /ws
@@ -157,13 +143,13 @@ RUN python3 -m pip install \
     && python3 -m pip install -r requirements.txt \
     && python3 setup.py develop \
     && python3 -m pip install \
-    kornia==0.8.0 open3d==0.19.0 pyquaternion==0.9.9 \
+    kornia==0.6.0 open3d==0.19.0 pyquaternion==0.9.9 \
     av2==0.3.4 \
     && rm -rf /var/lib/apt/lists/*
 
-###############################################
-# Installation and setup workspace to pcdet_ros2
-###############################################
+#######################################################
+# Installation and setup workspace to pcdet_ros2 image
+#######################################################
 
 WORKDIR /ws
 COPY . /ws
@@ -174,10 +160,26 @@ RUN git clone https://github.com/Box-Robotics/ros2_numpy -b humble
 
 # Install Python packages
 RUN python3 -m pip install catkin_pkg \
-    && python3 -m pip install nose==1.3.7 transform3d==0.0.4 numpy==1.26.4 \
+    && python3 -m pip install nose==1.3.7 transform3d==0.0.4 transforms3d==0.4.2 numpy==1.26.4 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ROS 2 ament_cmake_nose dependency
-RUN apt-get install -y \
+# Install ROS 2 dependencies
+RUN apt-get update && apt-get install -y \
     ros-humble-ament-cmake-nose \
+    ros-humble-sensor-msgs \
+    ros-humble-nav-msgs \
+    ros-humble-geometry-msgs \
+    ros-humble-vision-msgs \
+    ros-humble-visualization-msgs \
+    ros-humble-pcl-conversions \
+    ros-humble-pcl-ros \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-tf-transformations \
+    libpcl-dev \
     && rm -rf /var/lib/apt/lists/*
+
+
+# Clean
+RUN apt-get autoremove -y \
+    && apt-get clean -y 

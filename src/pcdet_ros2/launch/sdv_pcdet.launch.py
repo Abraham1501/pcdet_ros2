@@ -9,15 +9,6 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
-#PATH to virtual enviroment
-VENV_PATH = os.path.join(os.path.dirname(__file__), "..", "venv")
-VENV_PATH = os.path.abspath(VENV_PATH)
-
-# Force virtual enviroment
-os.environ["VIRTUAL_ENV"] = VENV_PATH
-os.environ["PATH"] = f"{VENV_PATH}/bin:" + os.environ["PATH"]
-os.environ["PYTHONPATH"] = f"{VENV_PATH}/lib/python3.10/site-packages:" + os.environ.get("PYTHONPATH", "")
-
 def generate_launch_description():
     package_name = 'pcdet_ros2'
     package_dir = get_package_share_directory(package_name)
@@ -47,7 +38,7 @@ def generate_launch_description():
 
     declare_input_topic_cmd = DeclareLaunchArgument(
         'input_topic',
-        default_value='/kitti/point_cloud',
+        default_value='/velodyne_points_rotated_notground',
         description='Input Point Cloud'
     )
 

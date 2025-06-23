@@ -12,7 +12,10 @@ DOCKER_COMMAND="docker run"
 xhost +
 
 $DOCKER_COMMAND -it -d \
+    --gpus all \
     --network=host \
+    --ipc=host \
+    --pid=host \
     --privileged \
     -v /dev:/dev \
     -v "$PWD/src:/ws/src" \
